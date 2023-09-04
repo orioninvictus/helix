@@ -4,13 +4,6 @@
     apiConnection: 'azuredevopstest'
     scanTypes: '1'
     scanWebSites: 'b45e158b-7190-4934-6d65-aefd033fcdb6'
-- task: PowerShell@2
-  inputs:
-    targetType: 'inline'
-    script: 'Invoke-RestMethod -uri ''https://www.netsparkercloud.com/api/1.0/scans/CreateFromPluginScanRequest'' -ContentType ''application/json; charset=UTF-8'' -Method POST -Headers @{ Authorization = "Basic $([System.Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes($env:USERID +'':''+$env:APITOKEN)))"} -Body $(@{ WebsiteId=''368262f0-2ea4-4704-6060-af4903b41d5d''; ProfileId=''d2b74f68-2d75-4be7-a982-af4903b45518''; ScanType=''FullWithSelectedProfile''; VcsCommitInfoModel = @{CiBuildConfigurationName = $env:SYSTEM_TEAMPROJECT; CiBuildHasChange = $env:BUILD_SOURCEVERSION; CiBuildId = $env:BUILD_BUILDID; CiBuildUrl= $env:SYSTEM_TEAMFOUNDATIONCOLLECTIONURI; Committer= $env:BUILD_REQUESTEDFOR; IntegrationSystem = ''AzureDevOps''; VcsName = $env:BUILD_REPOSITORY_PROVIDER; VcsVersion = $env:BUILD_SOURCEVERSION};}| ConvertTo-Json)'
-# Start with a minimal pipeline that you can customize to build and deploy your code.
-# Add steps that build, run tests, deploy, and more:
-# https://aka.ms/yaml
 
 trigger:
 - master
