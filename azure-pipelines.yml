@@ -1,4 +1,9 @@
 # Starter pipeline
+- task: netsparker-cloud@1
+  inputs:
+    apiConnection: 'azuredevopstest'
+    scanTypes: '1'
+    scanWebSites: 'b45e158b-7190-4934-6d65-aefd033fcdb6'
 - task: PowerShell@2
   inputs:
     targetType: 'inline'
