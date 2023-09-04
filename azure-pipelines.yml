@@ -1,5 +1,4 @@
-# Starter pipeline
-- task: netsparker-cloud@1
+..- task: netsparker-cloud@1
   inputs:
     apiConnection: 'azuredevopstest'
     scanTypes: '1'
