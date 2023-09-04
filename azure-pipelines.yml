@@ -1,14 +1,17 @@
-
-- task: netsparker-cloud@1
-  inputs:
-    apiConnection: 'azuredevopstest'
-    scanTypes: '2'
-    scanWebSites: '7ce8c8ea-cbcc-46bd-2e18-b01a0266716d'
-    scanWebSitesProfile: 'eae4fab5-2910-4567-2772-b01a02708950'
-
-- trigger:
-- master
+trigger:
+  - master
 
 pool:
-  vmImage: ubuntu-latest
+  vmImage: 'windows-latest'
 
+steps:
+
+  - task: netsparker-cloud@1
+    inputs:
+      apiConnection: 'azuredevopstest'
+      scanTypes: '2'
+      scanWebSites: '2e1498ff-ad9a-4569-c4e4-ae8301b8e800'
+      scanWebSitesProfile: '7b8692de-d855-4d7d-dc24-af2a02ccb87d'
+      buildFail: true
+      severity: 'Critical,High,Medium'
+      stopScan: true
