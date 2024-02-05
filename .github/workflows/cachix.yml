@@ -7,11 +7,11 @@ on:
 jobs:
   netsparker_scan_job:
     runs-on: ubuntu-20.04
-    steps:
     before_script:
       - "apt update && apt upgrade -y && apt install -y curl"
       - "apt update && apt upgrade -y && apt install -y jq"
-    script: |-
+    steps:
+    - script: |-
       #!/bin/bash
 
       #For this script to work, the dependencies specified in the before script part must be installed.
