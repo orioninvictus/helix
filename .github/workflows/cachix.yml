@@ -9,12 +9,9 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
     - name: Run Bash Script
-      run: |-
-      #!/bin/bash
+      run: |
+        #!/bin/bash
 
-    before_script:
-      - "apt update && apt upgrade -y && apt install -y curl"
-      - "apt update && apt upgrade -y && apt install -y jq"
     
       #For this script to work, the dependencies specified in the before script part must be installed.
 
