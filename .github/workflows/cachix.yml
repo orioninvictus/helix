@@ -7,14 +7,15 @@ on:
 jobs:
   netsparker_scan_job:
     runs-on: ubuntu-20.04
-    before_script:
-      - "apt update && apt upgrade -y && apt install -y curl"
-      - "apt update && apt upgrade -y && apt install -y jq"
     steps:
     - name: Run Bash Script
       run: |-
       #!/bin/bash
 
+    before_script:
+      - "apt update && apt upgrade -y && apt install -y curl"
+      - "apt update && apt upgrade -y && apt install -y jq"
+    
       #For this script to work, the dependencies specified in the before script part must be installed.
 
       #Bash script starting
