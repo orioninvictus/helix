@@ -13,3 +13,5 @@ jobs:
         #!/bin/bash
 
         echo "Hello, World!"
+        MinimumSeverity='Critical,High' 
+        CancelScan=false
