@@ -7,6 +7,7 @@ on:
 jobs:
   netsparker_scan_job:
     runs-on: ubuntu-20.04
+    steps:
     before_script:
       - "apt update && apt upgrade -y && apt install -y curl"
       - "apt update && apt upgrade -y && apt install -y jq"
