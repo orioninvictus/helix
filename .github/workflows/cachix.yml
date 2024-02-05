@@ -18,7 +18,7 @@ jobs:
         MinimumSeverity='Critical,High' 
         CancelScan=false
         BaseUrl='https://www.netsparkercloud.com'
-        WebsiteId='32bd8bc5-5aa7-430d-3365-afd90226256d'
+        WebsiteId='b45e158b719049346d65aefd033fcdb6'
         ScanType='FullWithPrimaryProfile'
         ProfileId='00000000-0000-0000-0000-000000000000'
         IntegrationSystem='GitLab'
