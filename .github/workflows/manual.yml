@@ -1,8 +1,7 @@
 netspaker_scan_job:
     runs-on: ubuntu-20.04
     steps:
-     
-  script: |-
+    script: |-
       #!/bin/bash
 
       #For this script to work, the dependencies specified in the before script part must be installed.
