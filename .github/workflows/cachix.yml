@@ -11,7 +11,8 @@ jobs:
       - "apt update && apt upgrade -y && apt install -y curl"
       - "apt update && apt upgrade -y && apt install -y jq"
     steps:
-    - script: |-
+    - name: Run Bash Script
+      run: |-
       #!/bin/bash
 
       #For this script to work, the dependencies specified in the before script part must be installed.
