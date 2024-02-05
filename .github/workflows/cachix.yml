@@ -6,21 +6,20 @@ on:
       - master
 
 jobs:
-  publish:
-    name: Publish Flake
-    runs-on: ubuntu-latest
+  netspaker_scan_job:
+    runs-on: ubuntu-20.04
     steps:
-    - name: Checkout sources
-      uses: actions/checkout@v3
-
-    - name: Install nix
-      uses: cachix/install-nix-action@v17
-
-    - name: Authenticate with Cachix
-      uses: cachix/cachix-action@v10
-      with:
-        name: helix
-        authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
-
-    - name: Build nix flake
-      run: nix build -L
+      # Starts actions with given inputs
+      - name: Start Netsparker Enterprise Scan
+        uses: netsparker/Netsparker-Cloud-GitHub-Actions@v0.1.0
+        id: netsparker-enterprise-scan-step
+        with:
+          website-id: '32bd8bc5-5aa7-430d-3365-afd90226256d'
+          scan-type: 'FullWithPrimaryProfile'
+          profile-id: '00000000-0000-0000-0000-000000000000'
+          user-id: ${{ secrets.NETSPARKER_USER_ID }}
+          api-token: ${{ secrets.NETSPARKER_API_TOKEN }}
+          base-url: 'https://www.netsparkercloud.com'
+      # Displays output for action
+      - name: Display Scan Request Message
+        run: echo "${{ steps.netsparker-enterprise-scan-step.outputs.scan-message }}"
