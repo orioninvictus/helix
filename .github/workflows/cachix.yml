@@ -16,8 +16,8 @@ jobs:
           website-id: '2b5010a9-a3f0-4009-0231-b013024ea640'
           scan-type: 'FullWithPrimaryProfile'
           profile-id: '00000000-0000-0000-0000-000000000000'
-          user-id: ${{ secrets.ACUNETIX_USER_ID }}
-          api-token: ${{ secrets.ACUNETIX_API_TOKEN }}
+          user-id: 4247672d903741000e0bae5801fd8ef1
+          api-token: hZ3uxk/BiZ73Q1kcj4w6iaBzg/4mfRGGfUM0OMMjGq4=
           base-url: 'https://online.acunetix360.com'
       # Displays output for action
       - name: Display Scan Request Message
