@@ -5,148 +5,20 @@ on:
       - master
 
 jobs:
-  netsparker_scan_job:
+  acunetix_scan_job:
     runs-on: ubuntu-20.04
     steps:
-    - name: Run Bash Script
-      run: |
-        #!/bin/bash
-
-        # For this script to work, the dependencies specified in the before_script part must be installed.
-
-        # Bash script starting
-        MinimumSeverity='Critical,High' 
-        CancelScan=false
-        BaseUrl='https://www.netsparkercloud.com'
-        WebsiteId='b45e158b719049346d65aefd033fcdb6'
-        ScanType='FullWithPrimaryProfile'
-        ProfileId='00000000-0000-0000-0000-000000000000'
-        IntegrationSystem='GitLab'
-
-        DoNotFail=false
-        FalsePositive=false
-        IsConfirmed=false
-        AcceptedRisk=false
-
-        typeset -A SeverityOptionsForBuildFailMesssage
-        SeverityOptionsForBuildFailMesssage[DoNotFail]="Do not fail the build"
-        SeverityOptionsForBuildFailMesssage[Critical]="Critical"
-        SeverityOptionsForBuildFailMesssage[Critical,High]="High or above"
-        SeverityOptionsForBuildFailMesssage[Critical,High,Medium]="Medium or above"
-        SeverityOptionsForBuildFailMesssage[Critical,High,Medium,Low]="Low or above"
-        SeverityOptionsForBuildFailMesssage[Critical,High,Medium,Low,Best Practice]="Best Practices or above"
-        
-        CreateScanUrl="$BaseUrl/api/1.0/scans/CreateFromPluginScanRequest"
-        ScanInfoUrl="$BaseUrl/api/1.0/scans/ScanInfoForPlugin"
-        ScanCancelUrl="$BaseUrl/api/1.0/scans/CancelScanForPlugin/"
-        
-        Body="{'WebsiteId': '$WebsiteId', 'ProfileId': '$ProfileId', 'ScanType': '$ScanType', 'VcsCommitInfoModel': {'CiBuildConfigurationName': '$CI_PROJECT_NAME', 'CiBuildHasChange': '$CI_COMMIT_SHA', 'CiBuildId': '$CI_PIPELINE_ID', 'CiBuildServerVersion': '$CI_SERVER_VERSION', 'CiBuildUrl': '$CI_PROJECT_URL', 'Committer': '$GITLAB_USER_EMAIL', 'IntegrationSystem': '$IntegrationSystem', 'VcsName': 'Git', 'VcsVersion': '$CI_COMMIT_SHA'}}"
-        
-        UserNameTokenPair="bdb3e6e42e8d4cd53ff8ae5801fec208:fIT+6HKMO3oio0QbIUYbi3GLq3DTHPv4/FrTZt438zY="
-        
-        typeset -A ScanTaskState
-        ScanTaskState[0]=Queued
-        ScanTaskState[1]=Scanning
-        ScanTaskState[2]=Archiving
-        ScanTaskState[3]=Complete
-        ScanTaskState[4]=Failed
-        ScanTaskState[5]=Cancelled
-        ScanTaskState[6]=Delayed
-        ScanTaskState[7]=Pausing
-        ScanTaskState[8]=Paused
-        ScanTaskState[9]=Resuming
-        
-        function CancelScan () {
-            scanTaskId=$1
-            read IsValid ErrorMessage < <(echo $(curl -u $UserNameTokenPair -X POST "$ScanCancelUrl$scanTaskId" -H 'Content-Type: application/json' -d "" | jq -r '.IsValid, .ErrorMessage'))
-        
-            if [[ $IsValid == true ]]; then
-                echo "Scan canceled, Id: $scanTaskId"
-            else
-                echo 'Scan cancel error:'
-                echo $ErrorMessage
-                exit 1
-            fi
-        }
-        
-        read ScanTaskId IsValid < <(echo $(curl -u $UserNameTokenPair -X POST "$CreateScanUrl" -H 'Content-Type: application/json' -d "$Body" | jq -r '.ScanTaskId, .IsValid'))
-        
-        echo "Created scan..."
-        echo "Scan task id:  $ScanTaskId"
-        
-        if [[ ! -z "$ScanTaskId" ]] && $IsValid
-        then
-          isScanCompleted=false
-          # Check the scan status every 10 seconds.
-          while :
-          do
-            if [[ $isScanCompleted == true ]]; then
-              break
-            fi
-            echo 'Requesting scan info..'
-
-            # get scan info
-            scanInfoResult=$(curl -u $UserNameTokenPair -X POST "$ScanInfoUrl" -H 'Content-Type: application/json' --data-raw '{ "ScanId": "'$ScanTaskId'", "DoNotFail": '$DoNotFail', "IsConfirmed": '$IsConfirmed', "IgnoredVulnerabilityStateFilters": { "Present": false, "FixedUnconfirmed": false, "FixedCantRetest": false, "FixedConfirmed": false, "Revived": false, "Scanning": false, "Ignored": false, "AcceptedRisk": '$AcceptedRisk', "FalsePositive": '$FalsePositive' }}')
-            InfoIsValid=$(echo $scanInfoResult | jq -r '.IsValid')
-            FoundedSeverities=($(echo $scanInfoResult | jq -r '.FoundedSeverityAndCounts | keys[]'))
-            FoundedSeverityCounts=($(echo $scanInfoResult | jq -r '.FoundedSeverityAndCounts | values[]'))
-            InfoState=$(echo $scanInfoResult | jq -r '.State')
-
-            echo "---- Scan Info Start ----"
-            
-            if  ! $InfoIsValid
-            then
-                echo 'Error when getting scan info.'
-                exit 1
-            fi
-                      
-            echo "ScanTaskId: $ScanTaskId"
-            echo "State: $InfoState"
-            echo "IsValid: $InfoIsValid"
-            echo "FoundedSeverities : "
-
-            if [[ $FoundedSeverities != {} ]] &&  [[ ! -z $FoundedSeverities ]]
-            then
-                for (( i=0; i<${#FoundedSeverities[@]}; i++)); do
-                  echo "- ${FoundedSeverities[$i]} (${FoundedSeverityCounts[$i]})"
-                  if [[ "$MinimumSeverity" == *"${FoundedSeverities[$i]}"* ]]; then
-                    echo "---- Error Messages ----"
-                    severityText=${SeverityOptionsForBuildFailMesssage[$MinimumSeverity]};
-                    echo "- Build failed because scan contains $severityText severity!"
-                    echo "---- Error Messages ----"
-                    echo "---- Scan Info End ----"  
-                    # cancel scan
-                    if [[ $CancelScan == true ]]; then
-                      CancelScan $ScanTaskId
-                    fi
-                    exit 1
-                  fi
-                done
-            else
-               echo "no vulnerability found."
-            fi      
-            echo "---- Scan Info End ----"  
-            # scan state control
-            if [ "$InfoState" = "${ScanTaskState[4]}" ] || [ "$InfoState" = "${ScanTaskState[5]}" ] || [ "$InfoState" = "${ScanTaskState[8]}" ] || [ "$InfoState" = "${ScanTaskState[7]}" ]
-            then
-                echo "---- Error Messages ----"
-                echo "- Scan aborted because state is $InfoState"
-                echo "---- Error Messages ----"
-                exit 1
-            fi
-        
-            if [ "$InfoState" = "${ScanTaskState[3]}" ]
-            then
-                isScanCompleted=true
-                exit 
-            else
-                isScanCompleted=false
-                sleep 10s
-            fi
-          done
-        else
-            echo "---- Error Messages ----"
-            echo $ErrorMessage
-            echo "---- Error Messages ----"
-            exit 1
-        fi
+      # Starts actions with given inputs
+      - name: Start Acunetix 360 Scan
+        uses: Acunetix360/Acunetix-360-GitHub-Actions@v0.1.0
+        id: acunetix-360-scan-step
+        with:
+          website-id: '2b5010a9-a3f0-4009-0231-b013024ea640'
+          scan-type: 'FullWithPrimaryProfile'
+          profile-id: '00000000-0000-0000-0000-000000000000'
+          user-id: ${{ secrets.ACUNETIX_USER_ID }}
+          api-token: ${{ secrets.ACUNETIX_API_TOKEN }}
+          base-url: 'https://online.acunetix360.com'
+      # Displays output for action
+      - name: Display Scan Request Message
+        run: echo "${{ steps.acunetix-360-scan-step.outputs.scan-message }}"
