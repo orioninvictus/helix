@@ -1,4 +1,5 @@
 trigger:
+
 - master
 
 pool:
@@ -7,7 +8,6 @@ pool:
 steps:
 - task: netsparker-cloud@1
   inputs:
-    apiConnection: 'azuredevopstest'
-    scanTypes: '2'
-    scanWebSites: '86683664-7a43-4913-d7c3-ae63017bc389'
-    scanWebSitesProfile: '4bfd3cad-af2c-4bf5-9ed2-ae6702a3c0b4'
+    apiConnection: 'Mali-Azure-Demo'
+    scanTypes: '1'
+    scanWebSites: 'bea09cd9-a054-4c40-fa1d-ae8202b0b39a'
