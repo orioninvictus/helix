@@ -8,6 +8,9 @@ pool:
 steps:
 - task: netsparker-cloud@1
   inputs:
-    apiConnection: 'Mali-Azure-Demo'
-    scanTypes: '1'
-    scanWebSites: 'bea09cd9-a054-4c40-fa1d-ae8202b0b39a'
+    apiConnection: 'azuredevopstest'
+    scanTypes: '2'
+    scanWebSites: '2e1498ff-ad9a-4569-c4e4-ae8301b8e800'
+    scanWebSitesProfile: '66094dd8-ee80-43d8-d8fc-af2e03a15091'
+    hasReport: true
+    reportType: 'ScanDetail'
