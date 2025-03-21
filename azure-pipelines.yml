@@ -10,7 +10,10 @@ steps:
   inputs:
     apiConnection: 'azuredevopstest'
     scanTypes: '2'
-    scanWebSites: '2e1498ff-ad9a-4569-c4e4-ae8301b8e800'
-    scanWebSitesProfile: '66094dd8-ee80-43d8-d8fc-af2e03a15091'
+    scanWebSites: 'b45e158b-7190-4934-6d65-aefd033fcdb6'
+    scanWebSitesProfile: '5477a239-6fd8-4122-50a1-b1bd03411f63'
+    buildFail: true
+    severity: 'Critical,High,Medium,Low'
     hasReport: true
     reportType: 'ScanDetail'
+    excludeAddressedIssues: false
