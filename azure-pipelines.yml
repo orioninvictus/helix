@@ -15,5 +15,5 @@ steps:
     buildFail: true
     severity: 'Critical,High,Medium,Low'
     hasReport: true
-    reportType: 'ScanDetail'
-    excludeAddressedIssues: false
+    onlyConfirmedIssues: true
+    onlyUnconfirmedIssues: true
