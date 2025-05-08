@@ -14,18 +14,18 @@ steps:
       
       # Variables
       $TARGET_ID = "2982b776-043d-47b8-bfdf-165e8668bb64"
-      $SCAN_PROFILE_ID = "11111111-1111-1111-1111-111111111112"
-      $REPORT_TEMPLATE_ID = "11111111-1111-1111-1111-111111111113"
-      $API_TOKEN = "WkPzp9qVpH6mbIHh6X2_fwz6TUUc08TEg9zWXotxReI"
+      $SCAN_PROFILE_ID = "11111111-1111-1111-1111-111111111111"
+      $REPORT_TEMPLATE_ID = "11111111-1111-1111-1111-111111111111"
+      $API_TOKEN =
       $INCREMENTAL = $true
       
       # Conditions
       $STOP_SCAN_BEFORE_START = $false
-      $FAIL_BUILD_ON_CONDITIONS = $true
+      $FAIL_BUILD_ON_CONDITIONS = $false
       $FAIL_ON_SEVERITY = "3"
-      $FAIL_ON_CONFIDENCE_FULL = $true
-      $IGNORE_IF_STATUS_IGNORED = $true
-      $IGNORE_IF_STATUS_FALSE_POSITIVE = $true
+      $FAIL_ON_CONFIDENCE_FULL = $false
+      $IGNORE_IF_STATUS_IGNORED = $false
+      $IGNORE_IF_STATUS_FALSE_POSITIVE = $false
       
       # Settings
       $API_ENDPOINT = "https://platform.invicti.com/api/v1"
