@@ -13,7 +13,7 @@ steps:
       # PowerShell script for Invicti CI/CD integration
       
       # Variables
-      $TARGET_ID = "2982b776-043d-47b8-bfdf-165e8668bb64"
+      $TARGET_ID = "5d30cf2a-36a9-4893-a33a-9b5b8c3cb17b"
       $SCAN_PROFILE_ID = "11111111-1111-1111-1111-111111111111"
       $REPORT_TEMPLATE_ID = "11111111-1111-1111-1111-111111111111"
       $API_TOKEN = "WkPzp9qVpH6mbIHh6X2_fwz6TUUc08TEg9zWXotxReI"
