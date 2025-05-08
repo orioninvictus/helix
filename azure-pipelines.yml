@@ -28,7 +28,7 @@ steps:
       $IGNORE_IF_STATUS_FALSE_POSITIVE = $true
       
       # Settings
-      $API_ENDPOINT = "https://app.invicti.com/api/v1"
+      $API_ENDPOINT = "https://platform.invicti.com/api/v1"
       $SCAN_TIME_LIMIT = 24 # hours
       $POLL_INTERVAL = 60 # seconds
       $MAX_POLL_ATTEMPTS = $SCAN_TIME_LIMIT * 60
