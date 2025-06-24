@@ -6,279 +6,309 @@ pool:
   vmImage: 'windows-latest'
 
 steps:
-- task: PowerShell@2
+- task: Bash@3
   inputs:
     targetType: 'inline'
     script: |
-      # PowerShell script for Invicti CI/CD integration
+      #!/bin/bash
+      set -e
       
       # Variables
-      $TARGET_ID = "fda49124-ce6f-497c-b19c-6bac34ef9d3d"
-      $SCAN_PROFILE_ID = "11111111-1111-1111-1111-111111111111" 
-      $REPORT_TEMPLATE_ID = "11111111-1111-1111-1111-111111111111" 
-      $API_TOKEN = "WkPzp9qVpH6mbIHh6X2_fwz6TUUc08TEg9zWXotxReI"
-      $INCREMENTAL = $true
+      TARGET_ID="fda49124-ce6f-497c-b19c-6bac34ef9d3d"
+      SCAN_PROFILE_ID="11111111-1111-1111-1111-111111111111"
+      REPORT_TEMPLATE_ID="11111111-1111-1111-1111-111111111111"
+      API_TOKEN="WkPzp9qVpH6mbIHh6X2_fwz6TUUc08TEg9zWXotxReI"
+      INCREMENTAL="true"
       
-      # Conditions
-      $STOP_SCAN_BEFORE_START = $false
-      $FAIL_BUILD_ON_CONDITIONS = $true
-      $FAIL_ON_SEVERITY = "3"
-      $FAIL_ON_CONFIDENCE_FULL = $false
-      $IGNORE_IF_STATUS_IGNORED = $false
-      $IGNORE_IF_STATUS_FALSE_POSITIVE = $false
-      $STOP_SCANING_IF_THE_BUILD_FAILS = $true
-      $FAIL_BUILD_BUT_AFTER_SCAN_HAS_COMPLATED = $false
+      # Conditions (true/false)
+      STOP_SCAN_BEFORE_START="false"
+      FAIL_BUILD_ON_CONDITIONS="true"
+      FAIL_ON_SEVERITY="3"
+      FAIL_ON_CONFIDENCE_FULL="false"
+      IGNORE_IF_STATUS_IGNORED="false"
+      IGNORE_IF_STATUS_FALSE_POSITIVE="false"
+      STOP_SCANING_IF_THE_BUILD_FAILS="true"
+      FAIL_BUILD_BUT_AFTER_SCAN_HAS_COMPLATED="false"
+      
       # Settings
-      $API_ENDPOINT = "https://platform.invicti.com/api/v1"
-      $SCAN_TIME_LIMIT = 24 # hours
-      $POLL_INTERVAL = 60 # seconds
-      $MAX_POLL_ATTEMPTS = ($SCAN_TIME_LIMIT * 3600) / $POLL_INTERVAL
+      API_ENDPOINT="https://platform.invicti.com/api/v1"
+      SCAN_TIME_LIMIT=24 # hours
+      POLL_INTERVAL=60 # seconds
+      MAX_POLL_ATTEMPTS=$(( (SCAN_TIME_LIMIT * 3600) / POLL_INTERVAL ))
+      CANCEL_SCAN=0
       
-      # Headers
-      $headers = @{
-          "Content-Type" = "application/json"
-          "Accept" = "application/json"
-          "X-Auth" = $API_TOKEN
+      # Function to extract JSON values
+      get_json_value() {
+          local json="$1"
+          local key="$2"
+          echo "$json" | grep -o "\"$key\":[^,}]*" | cut -d':' -f2- | tr -d '"' | tr -d ' ' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//'
       }
+      
+      # Function to extract array elements
+      get_json_array() {
+          local json="$1"
+          local key="$2"
+          echo "$json" | sed -n "/\"$key\":\[/,/\]/p" | sed '1d;$d' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//'
+      }
+      
+      # Headers for curl requests
+      HEADER_CONTENT="Content-Type: application/json"
+      HEADER_ACCEPT="Accept: application/json"
+      HEADER_AUTH="X-Auth: $API_TOKEN"
+      
+      REPORT_TEMPLATE_LINE=""
+      if [ -n "$REPORT_TEMPLATE_ID" ]; then
+        REPORT_TEMPLATE_LINE="    \"report_template_id\": \"$REPORT_TEMPLATE_ID\","
+      fi
       
       # Request body
-      $body = @{
-          user_authorized_to_scan = "yes"
-          target_id = $TARGET_ID
-          profile_id = $SCAN_PROFILE_ID
-          schedule = @{
-              disable = $false
-              start_date = $null
-              time_sensitive = $false
-          }
-          incremental = $INCREMENTAL
+      BODY=$(cat <<EOF
+      {
+          "user_authorized_to_scan": "yes",
+          "target_id": "$TARGET_ID",
+          "profile_id": "$SCAN_PROFILE_ID",    
+      	$REPORT_TEMPLATE_LINE
+          "schedule": {
+              "disable": false,
+              "start_date": null,
+              "time_sensitive": false
+          },
+          "incremental": $INCREMENTAL
       }
+      EOF
+      )
       
-      if (-not [string]::IsNullOrWhiteSpace($REPORT_TEMPLATE_ID)) {
-          $body["report_template_id"] = $REPORT_TEMPLATE_ID
-      }
+      if [ -z "$REPORT_TEMPLATE_ID" ]; then
+        BODY=$(echo "$BODY" | sed '/^[[:space:]]*$/d' | sed '4s/^,$//')
+      fi
       
-      $body = $body | ConvertTo-Json
-      
-      function Contains {
-          param (
-              [Parameter(Mandatory=$true)]
-              [string]$item,
-              
-              [Parameter(Mandatory=$true)]
-              [array]$list
-          )
+      function contains {
+          local item="$1"
+          shift
+          local list=("$@")
           
-          return $list -contains $item
+          for element in "${list[@]}"; do
+              if [[ "$element" == "$item" ]]; then
+                  return 0
+              fi
+          done
+          return 1
       }
       
-      function Cancel-Scan {
-          param(
-              [Parameter(Mandatory=$true)]
-              [string]$scanId
-          )
-      
-          try {
-              # Sending POST request
-              $abortResponse = Invoke-WebRequest -Uri "$API_ENDPOINT/scans/$scanId/abort" -Headers $headers -Method Post -UseBasicParsing
-      
-              if ($abortResponse.StatusCode -eq [System.Net.HttpStatusCode]::Conflict) {
-                  Write-Host "Scan $scanId already stopped: $($abortResponse.StatusCode)"
-              }
-      
-              # Check failed states (if not 200 OK)
-              if ($abortResponse.StatusCode -ne 200) {
-                  Write-Host "Scan $scanId error stopping: $($abortResponse.StatusCode)"
-              }
-          }
-          catch {
-              Write-Host "Scan $scanId error stopping: $_" -ForegroundColor Red
-          }
+      function cancel_scan {
+          local scan_id="$1"
+          
+          response=$(curl -s -X POST \
+              -H "$HEADER_CONTENT" \
+              -H "$HEADER_ACCEPT" \
+              -H "$HEADER_AUTH" \
+              "$API_ENDPOINT/scans/$scan_id/abort")
+          
+          # Extract status code from response
+          status_code=$(get_json_value "$response" "status_code")
+          if [ -z "$status_code" ]; then
+              status_code=$(get_json_value "$response" "status")
+          fi
+          if [ -z "$status_code" ]; then
+              status_code=200 # Assume success if no status found
+          fi
+          
+          if [[ "$status_code" == "409" ]]; then
+              echo "Scan $scan_id already stopped: $status_code"
+          elif [[ "$status_code" != "200" ]]; then
+              echo "Scan $scan_id error stopping: $status_code"
+          fi
       }
       
-      
-      function Check-Conditions {
-          param (
-              [Parameter(Mandatory=$true)]
-              [string]$Response
-          )
+      function check_conditions {
+          local response="$1"
           
-          $ResponseObj = $Response | ConvertFrom-Json
+          # Count vulnerabilities by counting occurrences of "vt_name"
+          vulnerabilities_count=$(echo "$response" | grep -o '"vt_name":' | wc -l)
           
-          if (-not $ResponseObj.vulnerabilities -or $ResponseObj.vulnerabilities.Count -eq 0) {
-              Write-Host "No vulnerabilities found."
+          if [[ "$vulnerabilities_count" -eq 0 ]]; then
+              echo "No vulnerabilities found."
               exit 0
-          }
+          fi
           
-          $EXIT_CODE = 0
+          EXIT_CODE=0
           
-          foreach ($VULN in $ResponseObj.vulnerabilities) {
-              $SEVERITY = $VULN.severity
-              $CONFIDENCE = $VULN.confidence
-              $STATUS = $VULN.status
+          # Extract vulnerabilities section
+          vuln_section=$(echo "$response" | sed -n '/"vulnerabilities": \[/,/\],/p')
+          
+          # Process each vulnerability
+          while IFS= read -r line; do
+              if [[ "$line" == *"vt_name"* ]]; then
+                  # Reset current vulnerability
+                  current_vuln=""
+              fi
+              current_vuln+="$line"
               
-              # Check if severity is in the FAIL_ON_SEVERITY array
-              $SEVERITY_FAIL = Contains -item $SEVERITY -list $FAIL_ON_SEVERITY
-              
-              # Check if confidence is 100 and FAIL_ON_CONFIDENCE_FULL is true
-              $CONFIDENCE_FAIL = ($CONFIDENCE -eq 100) -and $FAIL_ON_CONFIDENCE_FULL
-              
-              # Apply status exclusions if applicable
-              if ($SEVERITY_FAIL -or $CONFIDENCE_FAIL) {
-                  # Check if we should ignore based on status
-                  if (($STATUS -eq "ignored" -and $IGNORE_IF_STATUS_IGNORED) -or 
-                      ($STATUS -eq "false_positive" -and $IGNORE_IF_STATUS_FALSE_POSITIVE)) {
-                      continue
-                  }
+              if [[ "$line" == *"}"* ]]; then
+                  # Extract fields from current vulnerability
+                  severity=$(get_json_value "$current_vuln" "severity")
+                  confidence=$(get_json_value "$current_vuln" "confidence")
+                  status=$(get_json_value "$current_vuln" "status")
+                  vt_name=$(get_json_value "$current_vuln" "vt_name")
                   
-                  # If we got here, we need to fail
-                  Write-Host "Failed check: $($VULN.vt_name) (Severity: $SEVERITY, Confidence: $CONFIDENCE, Status: $STATUS)"
-      			if ($STOP_SCANING_IF_THE_BUILD_FAILS) {
-      				Cancel-Scan -scanId $scanId
-      			}
-                  $EXIT_CODE = 1			
-              }
-              
-              # fail fast
-              if ($EXIT_CODE -eq 1) {
-                  break
-              }
-          }
+                  # Check if severity matches FAIL_ON_SEVERITY
+                  severity_fail=0
+                  if [[ "$severity" == "$FAIL_ON_SEVERITY" ]]; then
+                      severity_fail=1
+                  fi
+                  
+                  # Check if confidence is 100 and FAIL_ON_CONFIDENCE_FULL is true
+                  confidence_fail=0
+                  if [[ "$confidence" -eq 100 ]] && [[ "$FAIL_ON_CONFIDENCE_FULL" == "true" ]]; then
+                      confidence_fail=1
+                  fi
+                  
+                  if [[ "$severity_fail" -eq 1 ]] || [[ "$confidence_fail" -eq 1 ]]; then
+                      # Check if we should ignore based on status
+                      if { [[ "$status" == "ignored" ]] && [[ "$IGNORE_IF_STATUS_IGNORED" == "true" ]]; } || \
+                         { [[ "$status" == "false_positive" ]] && [[ "$IGNORE_IF_STATUS_FALSE_POSITIVE" == "true" ]]; }; then
+                          continue
+                      fi
+                      
+                      # If we got here, we need to fail
+                      echo "Failed check: $vt_name (Severity: $severity, Confidence: $confidence, Status: $status)"
+                      if [[ "$STOP_SCANING_IF_THE_BUILD_FAILS" == "true" ]]; then
+                          cancel_scan "$SCAN_ID"
+                      fi
+                      EXIT_CODE=1
+                  fi
+                  
+                  # fail fast
+                  if [[ "$EXIT_CODE" -eq 1 ]]; then
+                      break
+                  fi
+              fi
+          done < <(echo "$vuln_section" | sed '1d;$d')
           
           exit $EXIT_CODE
       }
       
-      function Write-ScanStatus {
-          param (
-              [Parameter(Mandatory=$true)]
-              [string]$Status,
-              
-              [Parameter(Mandatory=$true)]
-              [int]$Attempt,
-              
-              [Parameter(Mandatory=$true)]
-              [int]$MaxAttempts
-          )
+      function write_scan_status {
+          local status="$1"
+          local attempt="$2"
+          local max_attempts="$3"
           
-          if ([string]::IsNullOrEmpty($Status)) {
-              $Status = "unknown"
-          }
+          if [[ -z "$status" ]]; then
+              status="unknown"
+          fi
           
-          $statusColor = switch ($Status.ToLower()) {
-              "completed" { "Green" }
-              "failed" { "Red" }
-              "aborting" { "Yellow" }
-              "processing" { "Cyan" }
-              "queued" { "Cyan" }
-              "starting" { "Cyan" }
-              default { "Gray" }
-          }
+          case $(echo "$status" | tr '[:upper:]' '[:lower:]') in
+              "completed") color="\033[0;32m" ;;
+              "failed") color="\033[0;31m" ;;
+              "aborting") color="\033[0;33m" ;;
+              "processing"|"queued"|"starting") color="\033[0;36m" ;;
+              *) color="\033[0;37m" ;;
+          esac
           
-          Write-Host "`nScan Status: " -NoNewline
-          Write-Host $Status -ForegroundColor $statusColor
-          Write-Host "Attempt: $Attempt"
-          Write-Host ("-" * 50)
+          echo -e "\nScan Status: ${color}${status}\033[0m"
+          echo "Attempt: $attempt"
+          echo "--------------------------------------------------"
       }
       
       # Stop any running scans
-      if ($STOP_SCAN_BEFORE_START) {
-          Write-Host "Stopping any running scans on this target before starting a new one"
+      if [[ "$STOP_SCAN_BEFORE_START" == "true" ]]; then
+          echo "Stopping any running scans on this target before starting a new one"
           
-          # Prepare API URL
-          $url = "$API_ENDPOINT/scans?q=target_id:$TARGET_ID;status:processing,queued,starting"
+          url="$API_ENDPOINT/scans?q=target_id:$TARGET_ID;status:processing,queued,starting"
           
-          try {
-              $response = Invoke-WebRequest -Uri $url -Headers $headers -Method Get -UseBasicParsing
-          }
-          catch {
-              Write-Host "Error querying existing scans: $_" -ForegroundColor Red
-              return
-          }
+          response=$(curl -s -X GET \
+              -H "$HEADER_CONTENT" \
+              -H "$HEADER_ACCEPT" \
+              -H "$HEADER_AUTH" \
+              "$url")
           
-          $encoding = [System.Text.Encoding]::GetEncoding("iso-8859-1")
-          $reader = New-Object System.IO.StreamReader($response.RawContentStream, $encoding)
-          $responseContent = $reader.ReadToEnd()
-          $reader.Close()
+          # Extract scans array
+          scans_section=$(echo "$response" | sed -n '/"scans": \[/,/\],/p')
           
-          $scans = $responseContent | ConvertFrom-Json
-          
-          if ($scans -and $scans.scans) {
-              foreach ($scan in $scans.scans) {
-                  $scanId = $scan.scan_id
-                  Write-Host "Stopping scan $scanId"
-      			
-      			Cancel-Scan $scanId
-              }
-          }
-          else {
-              Write-Host "No active scan found."
-          }
-      }
-      
+          if [[ -n "$scans_section" ]]; then
+              # Process each scan
+              while IFS= read -r line; do
+                  if [[ "$line" == *"scan_id"* ]]; then
+                      scan_id=$(get_json_value "$line" "scan_id")
+                      echo "Stopping scan $scan_id"
+                      cancel_scan "$scan_id"
+                  fi
+              done < <(echo "$scans_section" | sed '1d;$d')
+          else
+              echo "No active scan found."
+          fi
+      fi
       
       # Start the scan
-      Write-Host "Starting scan..."
-      $RESPONSE = Invoke-RestMethod -Uri "$API_ENDPOINT/scans" -Headers $headers -Method Post -Body $body
-      $SCAN_ID = $RESPONSE.scan_id
-      Start-Sleep -Seconds 5
+      echo "Starting scan..."
+      RESPONSE=$(curl -s -X POST \
+          -H "$HEADER_CONTENT" \
+          -H "$HEADER_ACCEPT" \
+          -H "$HEADER_AUTH" \
+          -d "$BODY" \
+          "$API_ENDPOINT/scans")
+      
+      # Extract scan ID
+      SCAN_ID=$(get_json_value "$RESPONSE" "scan_id")
+      sleep 5
+      
       # Poll for completion
-      Write-Host "Polling for completion..."
-      for ($i = 1; $i -le $MAX_POLL_ATTEMPTS; $i++) {
-          try {
-              $RESPONSE = Invoke-RestMethod -Uri "$API_ENDPOINT/scans/$SCAN_ID/results" -Headers $headers -Method Get
-              if (-not $RESPONSE) {
-                  Write-Host "Error: No response received from API" -ForegroundColor Red
-                  exit 1
-              }
-              
-              # Get the first result's status
-              $STATUS = if ($RESPONSE.results -and $RESPONSE.results.Count -gt 0) {
-                  $RESPONSE.results[0].status
-              } else {
-                  "unknown"
-              }
-              
-              $RESULT_ID = if ($RESPONSE.results -and $RESPONSE.results.Count -gt 0) {
-                  $RESPONSE.results[0].result_id
-              } else {
-                  $null
-              }
-              
-              Write-ScanStatus -Status $STATUS -Attempt $i -MaxAttempts $MAX_POLL_ATTEMPTS
-              
-              if ($STATUS -eq "aborted")
-      		{
-                  Write-Host "Invicti CI/CD integration script done"
-      			exit 1
-      		}
-      
-              if ($STATUS -eq "completed") {
-                  Write-Host "Scan completed successfully" -ForegroundColor Green
-                  # Get scan results
-                  $RESPONSE = Invoke-RestMethod -Uri "$API_ENDPOINT/scans/$SCAN_ID/results/$RESULT_ID/vulnerabilities" -Headers $headers -Method Get
-                  
-      			if ($FAIL_BUILD_ON_CONDITIONS -and $FAIL_BUILD_BUT_AFTER_SCAN_HAS_COMPLATED) {
-      				Cancel-Scan -scanId $scanId
-      			}
-      			
-                  # Fail upon certain conditions
-                  if ($FAIL_BUILD_ON_CONDITIONS) {
-                      Check-Conditions -Response ($RESPONSE | ConvertTo-Json -Depth 10)
-                  }
-                  
-                  exit 0
-              }
-              elseif ($STATUS -eq "failed" -or $STATUS -eq "aborting") {
-                  Write-Host "Scan $STATUS" -ForegroundColor Red
-                  exit 1
-              }
-          }
-          catch {
-              Write-Host "Error during polling: $_" -ForegroundColor Red
-              Write-Host "Retrying in $POLL_INTERVAL seconds..." -ForegroundColor Yellow
-          }
+      echo "Polling for completion..."
+      for ((i=1; i<=MAX_POLL_ATTEMPTS; i++)); do
+          response=$(curl -s -X GET \
+              -H "$HEADER_CONTENT" \
+              -H "$HEADER_ACCEPT" \
+              -H "$HEADER_AUTH" \
+              "$API_ENDPOINT/scans/$SCAN_ID/results")
           
-          Start-Sleep -Seconds $POLL_INTERVAL
-      }
+          if [[ -z "$response" ]]; then
+              echo "Error: No response received from API" >&2
+              exit 1
+          fi
+          
+          # Get the first result's status and ID
+          results_section=$(echo "$response" | sed -n '/"results": \[/,/\],/p')
+          if [[ -n "$results_section" ]]; then
+              first_result=$(echo "$results_section" | sed '1d;$d' | head -n 20 | tr -d '\n')
+              status=$(get_json_value "$first_result" "status")
+              result_id=$(get_json_value "$first_result" "result_id")
+          else
+              status="unknown"
+              result_id=""
+          fi
+          
+          write_scan_status "$status" "$i" "$MAX_POLL_ATTEMPTS"
+          
+          if [[ "$status" == "aborted" ]]; then
+              echo "Invicti CI/CD integration script done"
+              exit 1
+          fi
+          
+          if [[ "$status" == "completed" ]]; then
+              echo "Scan completed successfully"
+              # Get scan results
+              response=$(curl -s -X GET \
+                  -H "$HEADER_CONTENT" \
+                  -H "$HEADER_ACCEPT" \
+                  -H "$HEADER_AUTH" \
+                  "$API_ENDPOINT/scans/$SCAN_ID/results/$result_id/vulnerabilities")
+              
+              if [[ "$FAIL_BUILD_ON_CONDITIONS" == "true" ]] && [[ "$FAIL_BUILD_BUT_AFTER_SCAN_HAS_COMPLATED" == "true" ]]; then
+                  cancel_scan "$SCAN_ID"
+              fi
+              
+              # Fail upon certain conditions
+              if [[ "$FAIL_BUILD_ON_CONDITIONS" == "true" ]]; then
+                  check_conditions "$response"
+              fi
+              
+              exit 0
+          elif [[ "$status" == "failed" ]] || [[ "$status" == "aborting" ]]; then
+              echo "Scan $status" >&2
+              exit 1
+          fi
+          
+          sleep "$POLL_INTERVAL"
+      done
       
-      Write-Host "Invicti CI/CD integration script done"
+      echo "Invicti CI/CD integration script done"
