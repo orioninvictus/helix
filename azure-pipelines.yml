@@ -10,5 +10,5 @@ steps:
   inputs:
     apiUrl: 'https://online.acunetix.com'
     apiKey: '1b5abcca1ebbd4a108e04a0891832b21a9d39f530a698f876a5ab6666f3e20831'
-    targetAddress: 'http://example.com)'
+    targetAddress: 'http://example.com/test'
     criticality: '30'
