@@ -6,9 +6,279 @@ pool:
   vmImage: 'windows-latest'
 
 steps:
-- task: CreateDASTTarget@1
+- task: PowerShell@2
   inputs:
-    apiUrl: 'https://online.acunetix.com'
-    apiKey: '1b5abcca1ebbd4a108e04a0891832b21a9d39f530a698f876a5ab6666f3e20831'
-    targetAddress: 'http://example.com/test45'
-    criticality: '30'
+    targetType: 'inline'
+    script: |
+      # PowerShell script for Invicti CI/CD integration
+      
+      # Variables
+      $TARGET_ID = "fda49124-ce6f-497c-b19c-6bac34ef9d3d"
+      $SCAN_PROFILE_ID = "11111111-1111-1111-1111-111111111111" 
+      $REPORT_TEMPLATE_ID = "11111111-1111-1111-1111-111111111111" 
+      $API_TOKEN = "APITOKEN"
+      $INCREMENTAL = $true
+      
+      # Conditions
+      $STOP_SCAN_BEFORE_START = $false
+      $FAIL_BUILD_ON_CONDITIONS = $true
+      $FAIL_ON_SEVERITY = "3"
+      $FAIL_ON_CONFIDENCE_FULL = $false
+      $IGNORE_IF_STATUS_IGNORED = $false
+      $IGNORE_IF_STATUS_FALSE_POSITIVE = $false
+      $STOP_SCANING_IF_THE_BUILD_FAILS = $true
+      $FAIL_BUILD_BUT_AFTER_SCAN_HAS_COMPLATED = $false
+      # Settings
+      $API_ENDPOINT = "https://platform.invicti.com/api/integrations/v1"
+      $SCAN_TIME_LIMIT = 24 # hours
+      $POLL_INTERVAL = 60 # seconds
+      $MAX_POLL_ATTEMPTS = ($SCAN_TIME_LIMIT * 3600) / $POLL_INTERVAL
+      
+      # Headers
+      $headers = @{
+          "Content-Type" = "application/json"
+          "Accept" = "application/json"
+          "X-Auth" = $API_TOKEN
+      }
+      
+      # Request body
+      $body = @{
+          user_authorized_to_scan = "yes"
+          target_id = $TARGET_ID
+          profile_id = $SCAN_PROFILE_ID
+          schedule = @{
+              disable = $false
+              start_date = $null
+              time_sensitive = $false
+          }
+          incremental = $INCREMENTAL
+      }
+      
+      if (-not [string]::IsNullOrWhiteSpace($REPORT_TEMPLATE_ID)) {
+          $body["report_template_id"] = $REPORT_TEMPLATE_ID
+      }
+      
+      $body = $body | ConvertTo-Json
+      
+      function Contains {
+          param (
+              [Parameter(Mandatory=$true)]
+              [string]$item,
+              
+              [Parameter(Mandatory=$true)]
+              [array]$list
+          )
+          
+          return $list -contains $item
+      }
+      
+      function Cancel-Scan {
+          param(
+              [Parameter(Mandatory=$true)]
+              [string]$scanId
+          )
+      
+          try {
+              # Sending POST request
+              $abortResponse = Invoke-WebRequest -Uri "$API_ENDPOINT/scans/$scanId/abort" -Headers $headers -Method Post -UseBasicParsing
+      
+              if ($abortResponse.StatusCode -eq [System.Net.HttpStatusCode]::Conflict) {
+                  Write-Host "Scan $scanId already stopped: $($abortResponse.StatusCode)"
+              }
+      
+              # Check failed states (if not 200 OK)
+              if ($abortResponse.StatusCode -ne 200) {
+                  Write-Host "Scan $scanId error stopping: $($abortResponse.StatusCode)"
+              }
+          }
+          catch {
+              Write-Host "Scan $scanId error stopping: $_" -ForegroundColor Red
+          }
+      }
+      
+      
+      function Check-Conditions {
+          param (
+              [Parameter(Mandatory=$true)]
+              [string]$Response
+          )
+          
+          $ResponseObj = $Response | ConvertFrom-Json
+          
+          if (-not $ResponseObj.vulnerabilities -or $ResponseObj.vulnerabilities.Count -eq 0) {
+              Write-Host "No vulnerabilities found."
+              exit 0
+          }
+          
+          $EXIT_CODE = 0
+          
+          foreach ($VULN in $ResponseObj.vulnerabilities) {
+              $SEVERITY = $VULN.severity
+              $CONFIDENCE = $VULN.confidence
+              $STATUS = $VULN.status
+              
+              # Check if severity is in the FAIL_ON_SEVERITY array
+              $SEVERITY_FAIL = Contains -item $SEVERITY -list $FAIL_ON_SEVERITY
+              
+              # Check if confidence is 100 and FAIL_ON_CONFIDENCE_FULL is true
+              $CONFIDENCE_FAIL = ($CONFIDENCE -eq 100) -and $FAIL_ON_CONFIDENCE_FULL
+              
+              # Apply status exclusions if applicable
+              if ($SEVERITY_FAIL -or $CONFIDENCE_FAIL) {
+                  # Check if we should ignore based on status
+                  if (($STATUS -eq "ignored" -and $IGNORE_IF_STATUS_IGNORED) -or 
+                      ($STATUS -eq "false_positive" -and $IGNORE_IF_STATUS_FALSE_POSITIVE)) {
+                      continue
+                  }
+                  
+                  # If we got here, we need to fail
+                  Write-Host "Failed check: $($VULN.vt_name) (Severity: $SEVERITY, Confidence: $CONFIDENCE, Status: $STATUS)"
+      			if ($STOP_SCANING_IF_THE_BUILD_FAILS) {
+      				Cancel-Scan -scanId $scanId
+      			}
+                  $EXIT_CODE = 1			
+              }
+              
+              # fail fast
+              if ($EXIT_CODE -eq 1) {
+                  break
+              }
+          }
+          
+          exit $EXIT_CODE
+      }
+      
+      function Write-ScanStatus {
+          param (
+              [Parameter(Mandatory=$true)]
+              [string]$Status,
+              
+              [Parameter(Mandatory=$true)]
+              [int]$Attempt,
+              
+              [Parameter(Mandatory=$true)]
+              [int]$MaxAttempts
+          )
+          
+          if ([string]::IsNullOrEmpty($Status)) {
+              $Status = "unknown"
+          }
+          
+          $statusColor = switch ($Status.ToLower()) {
+              "completed" { "Green" }
+              "failed" { "Red" }
+              "aborting" { "Yellow" }
+              "processing" { "Cyan" }
+              "queued" { "Cyan" }
+              "starting" { "Cyan" }
+              default { "Gray" }
+          }
+          
+          Write-Host "`nScan Status: " -NoNewline
+          Write-Host $Status -ForegroundColor $statusColor
+          Write-Host "Attempt: $Attempt"
+          Write-Host ("-" * 50)
+      }
+      
+      # Stop any running scans
+      if ($STOP_SCAN_BEFORE_START) {
+          Write-Host "Stopping any running scans on this target before starting a new one"
+          
+          # Prepare API URL
+          $url = "$API_ENDPOINT/scans?q=target_id:$TARGET_ID;status:processing,queued,starting"
+          
+          try {
+              $response = Invoke-WebRequest -Uri $url -Headers $headers -Method Get -UseBasicParsing
+          }
+          catch {
+              Write-Host "Error querying existing scans: $_" -ForegroundColor Red
+              return
+          }
+          
+          $encoding = [System.Text.Encoding]::GetEncoding("iso-8859-1")
+          $reader = New-Object System.IO.StreamReader($response.RawContentStream, $encoding)
+          $responseContent = $reader.ReadToEnd()
+          $reader.Close()
+          
+          $scans = $responseContent | ConvertFrom-Json
+          
+          if ($scans -and $scans.scans) {
+              foreach ($scan in $scans.scans) {
+                  $scanId = $scan.scan_id
+                  Write-Host "Stopping scan $scanId"
+      			
+      			Cancel-Scan $scanId
+              }
+          }
+          else {
+              Write-Host "No active scan found."
+          }
+      }
+      
+      
+      # Start the scan
+      Write-Host "Starting scan..."
+      $RESPONSE = Invoke-RestMethod -Uri "$API_ENDPOINT/scans" -Headers $headers -Method Post -Body $body
+      $SCAN_ID = $RESPONSE.scan_id
+      Start-Sleep -Seconds 5
+      # Poll for completion
+      Write-Host "Polling for completion..."
+      for ($i = 1; $i -le $MAX_POLL_ATTEMPTS; $i++) {
+          try {
+              $RESPONSE = Invoke-RestMethod -Uri "$API_ENDPOINT/scans/$SCAN_ID/results" -Headers $headers -Method Get
+              if (-not $RESPONSE) {
+                  Write-Host "Error: No response received from API" -ForegroundColor Red
+                  exit 1
+              }
+              
+              # Get the first result's status
+              $STATUS = if ($RESPONSE.results -and $RESPONSE.results.Count -gt 0) {
+                  $RESPONSE.results[0].status
+              } else {
+                  "unknown"
+              }
+              
+              $RESULT_ID = if ($RESPONSE.results -and $RESPONSE.results.Count -gt 0) {
+                  $RESPONSE.results[0].result_id
+              } else {
+                  $null
+              }
+              
+              Write-ScanStatus -Status $STATUS -Attempt $i -MaxAttempts $MAX_POLL_ATTEMPTS
+              
+              if ($STATUS -eq "aborted")
+      		{
+                  Write-Host "Invicti CI/CD integration script done"
+      			exit 1
+      		}
+      
+              if ($STATUS -eq "completed") {
+                  Write-Host "Scan completed successfully" -ForegroundColor Green
+                  # Get scan results
+                  $RESPONSE = Invoke-RestMethod -Uri "$API_ENDPOINT/scans/$SCAN_ID/results/$RESULT_ID/vulnerabilities" -Headers $headers -Method Get
+                  
+      			if ($FAIL_BUILD_ON_CONDITIONS -and $FAIL_BUILD_BUT_AFTER_SCAN_HAS_COMPLATED) {
+      				Cancel-Scan -scanId $scanId
+      			}
+      			
+                  # Fail upon certain conditions
+                  if ($FAIL_BUILD_ON_CONDITIONS) {
+                      Check-Conditions -Response ($RESPONSE | ConvertTo-Json -Depth 10)
+                  }
+                  
+                  exit 0
+              }
+              elseif ($STATUS -eq "failed" -or $STATUS -eq "aborting") {
+                  Write-Host "Scan $STATUS" -ForegroundColor Red
+                  exit 1
+              }
+          }
+          catch {
+              Write-Host "Error during polling: $_" -ForegroundColor Red
+              Write-Host "Retrying in $POLL_INTERVAL seconds..." -ForegroundColor Yellow
+          }
+          
+          Start-Sleep -Seconds $POLL_INTERVAL
+      }
+      
+      Write-Host "Invicti CI/CD integration script done"
