@@ -15,7 +15,7 @@ steps:
   inputs:
     apiUrl: 'https://online.acunetix.com'
     targetAddress: 'http://vulnapi.testinvicti.com/'
-    description: 'DAST created from Azure DevOps test2'
+    description: 'DAST created from Azure DevOps test3'
     criticality: '30'
 
 - task: ConfigureDASTTarget@1
