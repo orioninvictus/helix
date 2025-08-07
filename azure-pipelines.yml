@@ -15,7 +15,7 @@ steps:
   inputs:
     apiUrl: 'https://online.acunetix.com'
     targetAddress: 'https://vulnbank.org/'
-    description: 'DAST created from Azure DevOps test6'
+    description: 'DAST created from Azure DevOps test7'
     criticality: '30'
 
 - task: ConfigureDASTTarget@1
@@ -29,9 +29,8 @@ steps:
 - task: StartDASTScan@1
   inputs:
     apiUrl: 'https://online.acunetix.com'
-    criticalThreshold: '0'
+    criticalThreshold: '2'
     highThreshold: '5'
-    failBuildOnFindings: false
     targetId: '$(createTargetStep.DASTTargetId)'
     profileId: '11111111-1111-1111-1111-111111111111'
     scheduleDisable: true
