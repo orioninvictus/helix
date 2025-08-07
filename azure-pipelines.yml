@@ -10,28 +10,13 @@ steps:
 
 - checkout: self
 
-- task: CreateDASTTarget@1
-  name: createTargetStep
+- task: StartDASTScan@2
   inputs:
     apiUrl: 'https://online.acunetix.com'
-    targetAddress: 'https://vulnbank.org/'
-    description: 'DAST created from Azure DevOps test7'
-    criticality: '30'
-
-- task: ConfigureDASTTarget@1
-  inputs:
-    apiUrl: 'https://online.acunetix.com'
-    targetId: '$(createTargetStep.DASTTargetId)'
-    limitCrawlerScope: true
-    scanSpeed: 'fast'
-    authenticationEnabled: false
-
-- task: StartDASTScan@1
-  inputs:
-    apiUrl: 'https://online.acunetix.com'
-    criticalThreshold: '2'
-    highThreshold: '5'
+    criticalThreshold: '0'
+    highThreshold: '0'
+    mediumThreshold: '0'
     targetId: '$(createTargetStep.DASTTargetId)'
     profileId: '11111111-1111-1111-1111-111111111111'
     scheduleDisable: true
-
+    standaloneMode: true
