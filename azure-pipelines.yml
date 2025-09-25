@@ -10,13 +10,18 @@ steps:
 
 - checkout: self
 
-- task: StartDASTScan@2
+- task: netsparker-cloud@1
   inputs:
-    apiUrl: 'https://online.acunetix.com'
-    criticalThreshold: '0'
-    highThreshold: '0'
-    mediumThreshold: '0'
-    targetId: '$(createTargetStep.DASTTargetId)'
-    profileId: '11111111-1111-1111-1111-111111111111'
-    scheduleDisable: true
-    standaloneMode: true
+    apiConnection: 'azuredevopstest'
+    scanTypes: '1'
+    scanWebSites: '63256018-56cb-43c8-5586-b08f0222e8e8'
+    buildFail: true
+    severity: 'Critical'
+    hasReport: true
+    reportType: 'SansTop25'
+    onlyConfirmedIssues: true
+    onlyUnconfirmedIssues: true
+    isConfirmed: true
+    ignoreFalsePositive: true
+    ignoreRiskAccepted: true
+    stopScan: true
