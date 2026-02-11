@@ -5,23 +5,38 @@ trigger:
 pool:
   vmImage: 'windows-latest'
 
+
+variables:
+  INVICTI_API_BASE_URL: "https://platform.invicti.com" 
+  INVICTI_API_TOKEN: 'XDVNQyJc-X2_W3GDplRyXPJpSNJ8j7U85U1vqps2fKU'
+  INVICTI_TARGET_ID: "8e8bc5d4-a134-4dfb-9527-282624601c87" 
+  INVICTI_SCAN_AGENT: 'CloudAgent'
+  INVICTI_SCAN_PROFILE: "Full Scan" 
+
 steps:
+- task: DockerInstaller@0
+  displayName: 'Ensure Docker is installed'
 
+- script: |
+    echo "Pulling Invicti CLI image..."
+    docker pull invicti/scan-cli:latest
+  displayName: 'Pull Scan CLI Image'  
 
-- checkout: self
+- script: |
+    echo "Running Invicti Scan CLI..."
+    docker run --rm \
+      -e INVICTI_API_BASE_URL="$(INVICTI_API_BASE_URL)" \
+      -e INVICTI_API_TOKEN="$(INVICTI_API_TOKEN)" \
+      -e INVICTI_TARGET_ID="$(INVICTI_TARGET_ID)" \
+      -e INVICTI_SCAN_AGENT="$(INVICTI_SCAN_AGENT)" \
+      invicti/scan-cli:latest \
+      /home/invicti/scancli/ScanCLI
+  displayName: 'Run Invicti Scan'
+  failOnStderr: true
 
-- task: netsparker-cloud@1
+- task: PublishBuildArtifacts@1
   inputs:
-    apiConnection: 'azuredevopstest'
-    scanTypes: '1'
-    scanWebSites: '63256018-56cb-43c8-5586-b08f0222e8e8'
-    buildFail: true
-    severity: 'Critical'
-    hasReport: true
-    reportType: 'SansTop25'
-    onlyConfirmedIssues: true
-    onlyUnconfirmedIssues: true
-    isConfirmed: true
-    ignoreFalsePositive: true
-    ignoreRiskAccepted: true
-    stopScan: true
+    PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+    ArtifactName: 'scan-results'
+    publishLocation: 'Container'
+  displayName: 'Publish Scan Results'
