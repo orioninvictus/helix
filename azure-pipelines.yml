@@ -12,6 +12,9 @@ steps:
   inputs:
     apiUrl: 'https://platform.invicti.com'
     targetAddress: 'http://php.testinvicti.com/'
+    criticality: '30'
+    useCustomApiKey: true
+    apiKey: 'y5_4Zxv0F0RVDNQltgzDrordSN0KW4Ci9KvbooyUImc'
 - task: ConfigureDASTTarget@1
   inputs:
     apiUrl: 'https://platform.invicti.com'
