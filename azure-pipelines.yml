@@ -12,7 +12,6 @@ steps:
   inputs:
     apiUrl: 'https://platform.invicti.com'
     targetAddress: 'http://php.testinvicti.com/'
-    criticality: '30'
 - task: ConfigureDASTTarget@1
   inputs:
     apiUrl: 'https://platform.invicti.com'
