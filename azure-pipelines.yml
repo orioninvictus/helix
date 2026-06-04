@@ -9,8 +9,9 @@ resources:
   repositories:
     - repository: invictustest
       type: git
-      name: orioninvictus/invictustest
+      name: invictustest/invictustest
       ref: refs/heads/main
+
 
 steps:
 - checkout: invictustest
