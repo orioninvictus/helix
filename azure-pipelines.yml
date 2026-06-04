@@ -18,26 +18,21 @@ steps:
 
 - task: CreateDASTTarget@2
   inputs:
-    apiUrl: 'https://platform.invicti.com'
-    targetAddress: 'http://php.testinvicti.com/'
+    invictiServiceConnection: 'Invicti Custom Plugin by Erc'
+    targetAddress: 'http://php.testinvicti.com'
     criticality: '30'
 
 - task: ConfigureDASTTarget@2
   inputs:
-    apiUrl: 'https://platform.invicti.com'
-    targetId: '$(createTargetStep.DASTTargetId)'
-    description: 'dsadsad'
-    limitCrawlerScope: true
+    invictiServiceConnection: 'Invicti Custom Plugin by Erc'
+    targetId: 
+    limitCrawlerScope: false
     scanSpeed: 'fast'
-    importFilePath: 'import_files/openapi-swagger_basicauthentication.yaml'
-    authenticationEnabled: true
-    authUsername: 'admin'
-    authPassword: 'admin123456'
-    authUrl: 'http://php.testinvicti.com/auth/login.php'
+    authenticationEnabled: false
 
 - task: StartDASTScan@3
   inputs:
-    apiUrl: 'https://platform.invicti.com'
+    invictiServiceConnection: 'Invicti Custom Plugin by Erc'
     criticalThreshold: '0'
     highThreshold: '0'
     mediumThreshold: '2'
@@ -46,3 +41,4 @@ steps:
     profileId: '11111111-1111-1111-1111-111111111111'
     scheduleDisable: false
     scheduleTimeSensitive: false
+    enableTagging: true
