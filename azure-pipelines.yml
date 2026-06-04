@@ -7,7 +7,7 @@ pool:
 
 
 steps:
-
+- checkout: self
 
 - task: CreateDASTTarget@2
   inputs:
