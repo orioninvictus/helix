@@ -20,7 +20,6 @@ steps:
     description: 'lalalallala'
     limitCrawlerScope: true
     scanSpeed: 'fast'
-    importFilePath: 'import_files/openapi-swagger_basicauthentication.yaml'
     authenticationEnabled: true
     authUsername: 'admin'
     authPassword: 'admin123456'
