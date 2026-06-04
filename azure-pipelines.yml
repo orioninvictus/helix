@@ -20,12 +20,10 @@ steps:
     description: 'lalalallala'
     limitCrawlerScope: true
     scanSpeed: 'fast'
-    importFilePath: 'import_files/openapi-swagger_basicauthentication.yaml'
     authenticationEnabled: true
     authUsername: 'admin'
     authPassword: 'admin123456'
     authUrl: 'http://php.testinvicti.com/auth/login.php'
-    criticality: '30'
 
 - task: StartDASTScan@3
   inputs:
