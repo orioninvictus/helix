@@ -19,16 +19,21 @@ steps:
 - task: CreateDASTTarget@2
   inputs:
     invictiServiceConnection: 'DAST Plugin by ERC'
-    targetAddress: 'http://php.testinvicti.com/'
+    targetAddress: 'http://php.testinvicti.com'
     criticality: '30'
 
 - task: ConfigureDASTTarget@2
   inputs:
     invictiServiceConnection: 'DAST Plugin by ERC'
     targetId: 
-    limitCrawlerScope: true
+    description: 'Woww'
+    limitCrawlerScope: false
     scanSpeed: 'fast'
-    authenticationEnabled: false
+    importFilePath: 'import_files/openapi-swagger_basicauthentication.yaml'
+    authenticationEnabled: true
+    authUsername: 'admin'
+    authPassword: 'admin123456'
+    authUrl: 'http://php.testinvicti.com/auth/login.php'
 
 - task: StartDASTScan@3
   inputs:
@@ -39,6 +44,4 @@ steps:
     abortScanOnFindings: true
     targetId: 
     profileId: '11111111-1111-1111-1111-111111111111'
-    reportTemplateId: '11111111-1111-1111-1111-111111111111'
-    generateReport: true
     enableTagging: true
