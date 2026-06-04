@@ -13,12 +13,29 @@ steps:
   inputs:
     apiUrl: 'https://platform.invicti.com'
     targetAddress: 'http://php.testinvicti.com'
-    criticality: '30'
 - task: ConfigureDASTTarget@2
   inputs:
     apiUrl: 'https://platform.invicti.com'
     targetId: '$(createTargetStep.DASTTargetId)'
-    description: 'lalalallalala'
+    description: 'lalalallala'
     limitCrawlerScope: true
     scanSpeed: 'fast'
-    authenticationEnabled: false
+    importFilePath: 'import_files/openapi-swagger_basicauthentication.yaml'
+    authenticationEnabled: true
+    authUsername: 'admin'
+    authPassword: 'admin123456'
+    authUrl: 'http://php.testinvicti.com/auth/login.php'
+    criticality: '30'
+
+- task: StartDASTScan@3
+  inputs:
+    apiUrl: 'https://platform.invicti.com'
+    criticalThreshold: '2'
+    highThreshold: '3'
+    mediumThreshold: '4'
+    abortScanOnFindings: true
+    targetId: '$(createTargetStep.DASTTargetId)'
+    profileId: '11111111-1111-1111-1111-111111111111'
+    scheduleDisable: true
+    triggerable: true
+
