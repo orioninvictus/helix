@@ -5,9 +5,43 @@ trigger:
 pool:
   vmImage: 'ubuntu-latest'
 
+resources:
+  repositories:
+    - repository: invictustest
+      type: git
+      name: orioninvictus/invictustest
+      ref: refs/heads/main
 
 steps:
-- checkout: self
+- checkout: invictustest
 
-- script: find $(Build.SourcesDirectory) -name "*.yaml" -o -name "*.yml"
-  displayName: 'List YAML files in repo'
+- task: CreateDASTTarget@2
+  inputs:
+    apiUrl: 'https://platform.invicti.com'
+    targetAddress: 'http://php.testinvicti.com/'
+    criticality: '30'
+
+- task: ConfigureDASTTarget@2
+  inputs:
+    apiUrl: 'https://platform.invicti.com'
+    targetId: '$(createTargetStep.DASTTargetId)'
+    description: 'dsadsad'
+    limitCrawlerScope: true
+    scanSpeed: 'fast'
+    importFilePath: 'import_files/openapi-swagger_basicauthentication.yaml'
+    authenticationEnabled: true
+    authUsername: 'admin'
+    authPassword: 'admin123456'
+    authUrl: 'http://php.testinvicti.com/auth/login.php'
+
+- task: StartDASTScan@3
+  inputs:
+    apiUrl: 'https://platform.invicti.com'
+    criticalThreshold: '0'
+    highThreshold: '0'
+    mediumThreshold: '2'
+    abortScanOnFindings: true
+    targetId: 
+    profileId: '11111111-1111-1111-1111-111111111111'
+    scheduleDisable: false
+    scheduleTimeSensitive: false
