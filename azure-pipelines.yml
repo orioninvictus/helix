@@ -7,6 +7,7 @@ pool:
 
 
 steps:
+- checkout: self
 - task: CreateDASTTarget@2
   inputs:
     apiUrl: 'https://platform.invicti.com'
