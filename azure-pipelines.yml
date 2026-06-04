@@ -18,13 +18,13 @@ steps:
 
 - task: CreateDASTTarget@2
   inputs:
-    invictiServiceConnection: 'Invicti Custom Plugin by Erc'
-    targetAddress: 'http://php.testinvicti.com'
+    invictiServiceConnection: 'Invicti DAST Plugin by ERC'
+    targetAddress: 'http://php.testinvicti.com/'
     criticality: '30'
 
 - task: ConfigureDASTTarget@2
   inputs:
-    invictiServiceConnection: 'Invicti Custom Plugin by Erc'
+    invictiServiceConnection: 'Invicti DAST Plugin by ERC'
     targetId: 
     limitCrawlerScope: false
     scanSpeed: 'fast'
@@ -32,7 +32,7 @@ steps:
 
 - task: StartDASTScan@3
   inputs:
-    invictiServiceConnection: 'Invicti Custom Plugin by Erc'
+    invictiServiceConnection: 'Invicti DAST Plugin by ERC'
     criticalThreshold: '0'
     highThreshold: '0'
     mediumThreshold: '2'
