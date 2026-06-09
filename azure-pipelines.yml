@@ -16,18 +16,35 @@ resources:
 steps:
 - checkout: invictustest
 
+- task: CreateDASTTarget@2
+  inputs:
+    invictiServiceConnection: 'hoopppaalaaa'
+    targetAddress: 'http://php.testinvicti.com/'
+    criticality: '30'
+
+
+- task: ConfigureDASTTarget@2
+  inputs:
+    invictiServiceConnection: 'hoopppaalaaa'
+    targetId: 
+    limitCrawlerScope: false
+    scanSpeed: 'fast'
+    importFilePath: 'import_files/openapi-swagger_basicauthentication.yaml'
+    authenticationEnabled: true
+    authUsername: 'admin'
+    authPassword: 'admin123456'
+    authUrl: 'http://php.testinvicti.com/auth/login.php'
+
+
 - task: StartDASTScan@3
   inputs:
     invictiServiceConnection: 'hoopppaalaaa'
-    standaloneMode: true
-    standaloneTargetId: '2a2cd275-ce75-4930-b0bb-b942a918a2bc'
     criticalThreshold: '0'
     highThreshold: '0'
-    mediumThreshold: '2'
+    mediumThreshold: '1'
     abortScanOnFindings: true
     targetId: 
     profileId: '11111111-1111-1111-1111-111111111111'
     reportTemplateId: '11111111-1111-1111-1111-111111111111'
     generateReport: true
     enableTagging: true
-
