@@ -16,3 +16,32 @@ resources:
 steps:
 - checkout: invictustest
 
+- task: CreateDASTTarget@2
+  inputs:
+    invictiServiceConnection: 'Plugin Mastermind'
+    targetAddress: 'http://php.testinvicti.com'
+    criticality: '30'
+
+- task: ConfigureDASTTarget@2
+  inputs:
+    invictiServiceConnection: 'Plugin Mastermind'
+    targetId: 
+    limitCrawlerScope: true
+    scanSpeed: 'fast'
+    importFilePath: 'import_files/openapi-swagger_basicauthentication.yaml'
+    authenticationEnabled: true
+    authUsername: '$(Username)'
+    authPassword: '$(MySecretPassword)'
+    authUrl: 'http://php.testinvicti.com/auth/login.php'
+
+- task: StartDASTScan@3
+  inputs:
+    invictiServiceConnection: 'Plugin Mastermind'
+    criticalThreshold: '0'
+    highThreshold: '0'
+    mediumThreshold: '2'
+    abortScanOnFindings: true
+    targetId: 
+    profileId: '11111111-1111-1111-1111-111111111111'
+    reportTemplateId: '11111111-1111-1111-1111-111111111111'
+    generateReport: true
