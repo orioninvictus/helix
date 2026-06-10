@@ -20,7 +20,7 @@ steps:
   inputs:
     invictiServiceConnection: 'Plugin Mastermind'
     targetAddress: 'http://php.testinvicti.com/'
-    criticality: '20'
+    criticality: '30'
 
 - task: ConfigureDASTTarget@2
   inputs:
@@ -29,7 +29,6 @@ steps:
     limitCrawlerScope: true
     scanSpeed: 'fast'
     importFilePath: 'import_files/openapi-swagger_basicauthentication.yaml'
-    importFileName: 'ertugrulfile.yaml'
     authenticationEnabled: true
     authUsername: '$(Username)'
     authPassword: '$(MySecretPassword)'
@@ -39,8 +38,7 @@ steps:
   inputs:
     invictiServiceConnection: 'Plugin Mastermind'
     targetId: 
-    profileId: '11111111-1111-1111-1111-111111111119'
-    maxScanTime: '1000'
+    profileId: '11111111-1111-1111-1111-111111111111'
     criticalThreshold: '0'
     highThreshold: '0'
     mediumThreshold: '1'
