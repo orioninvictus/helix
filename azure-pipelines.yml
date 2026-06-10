@@ -33,7 +33,7 @@ steps:
     authenticationEnabled: true
     authUsername: '$(Username)'
     authPassword: '$(MySecretPassword)'
-    authUrl: 'import_files/openapi-swagger_basicauthentication.yaml'
+    authUrl: 'http://php.testinvicti.com/auth/login.php'
 
 - task: StartDASTScan@3
   inputs:
