@@ -16,13 +16,16 @@ resources:
 steps:
 - checkout: invictustest
 
-- task: invicti-platform-azure-extension@1
+- task: StartDASTScan@3
   inputs:
-    apiConnection: 'Invicti Platform'
-    targetId: '33fb6efd-45da-481f-9979-db29bfbcbd4a'
-    scanProfileId: '11111111-1111-1111-1111-111111111111'
-    buildFail: true
-    minimumSeverity: 'Medium'
-    stopScan: true
-    hasReport: true
+    invictiServiceConnection: 'Plugin Mastermind'
+    standaloneMode: true
+    standaloneTargetId: '2a2cd275-ce75-4930-b0bb-b942a918a2bc'
+    profileId: '11111111-1111-1111-1111-111111111119'
+    maxScanTime: '5000'
+    criticalThreshold: '0'
+    highThreshold: '0'
+    mediumThreshold: '1'
+    abortScanOnFindings: true
+    generateReport: true
     reportTemplateId: '11111111-1111-1111-1111-111111111111'
