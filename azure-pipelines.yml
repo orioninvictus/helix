@@ -8,8 +8,15 @@ variables:
 pool:
   vmImage: 'ubuntu-latest'
 
+resources:
+  repositories:
+  - repository: AppRepo
+    type: git
+    name: orioninvictus/invictustest
+    ref: main # Or the specific branch you are targeting
+
 steps:
-- checkout: self
+- checkout: AppRepo
   displayName: 'Checkout Application Repository'
 
 - script: |
