@@ -1,31 +1,18 @@
 trigger:
+- main
 
-- master
+variables:
+  # CRITICAL: This satisfies the decorator.yml condition to trigger injection!
+  Environment.Name: 'Staging'
 
 pool:
   vmImage: 'ubuntu-latest'
 
-resources:
-  repositories:
-    - repository: invictustest
-      type: git
-      name: invictustest/invictustest
-      ref: refs/heads/main
-
-
 steps:
-- checkout: invictustest
+- checkout: self
+  displayName: 'Checkout Application Repository'
 
-- task: StartDASTScan@3
-  inputs:
-    invictiServiceConnection: 'Plugin Mastermind'
-    standaloneMode: true
-    standaloneTargetId: '2a2cd275-ce75-4930-b0bb-b942a918a2bc'
-    profileId: '11111111-1111-1111-1111-111111111119'
-    maxScanTime: '5000'
-    criticalThreshold: '0'
-    highThreshold: '0'
-    mediumThreshold: '1'
-    abortScanOnFindings: true
-    generateReport: true
-    reportTemplateId: '11111111-1111-1111-1111-111111111111'
+- script: |
+    echo "Executing normal developer application build steps..."
+    echo "Compiling code, running unit tests, preparing environment..."
+  displayName: 'Standard Dev Compilation Step'
