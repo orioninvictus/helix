@@ -12,7 +12,7 @@ resources:
   repositories:
   - repository: AppRepo
     type: git
-    name: orioninvictus/invictustest
+    name: invictustest
     ref: main # Or the specific branch you are targeting
 
 steps:
