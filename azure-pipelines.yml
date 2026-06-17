@@ -17,7 +17,8 @@ resources:
 
 steps:
 - checkout: AppRepo
-  displayName: 'Checkout Application Repository'
+  path: s
+  displayName: 'Checkout Application Code'
 
 - script: |
     echo "Executing normal developer application build steps..."
