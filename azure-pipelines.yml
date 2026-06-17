@@ -8,17 +8,8 @@ variables:
 pool:
   vmImage: 'ubuntu-latest'
 
-resources:
-  repositories:
-  - repository: AppRepo
-    type: git
-    name: invictustest
-    ref: main # Or the specific branch you are targeting
-
 steps:
-- checkout: AppRepo
-  path: s
-  displayName: 'Checkout Application Code'
+- checkout: self
 
 - script: |
     echo "Executing normal developer application build steps..."
