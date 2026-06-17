@@ -1,17 +1,21 @@
 trigger:
-- main
+- master # Or whichever branch you are using in GitHub
 
 variables:
-  # CRITICAL: This satisfies the decorator.yml condition to trigger injection!
+  # This variable forces our decorator.yml condition to inject the task
   Environment.Name: 'Staging'
 
 pool:
   vmImage: 'ubuntu-latest'
 
 steps:
+# Standard default checkout of your GitHub repository
 - checkout: self
+  displayName: 'Checkout GitHub Repository'
 
 - script: |
-    echo "Executing normal developer application build steps..."
-    echo "Compiling code, running unit tests, preparing environment..."
-  displayName: 'Standard Dev Compilation Step'
+    echo "Checking baseline path..."
+    echo "Sources directory is: $(Build.SourcesDirectory)"
+    echo "Verifying file exists at root:"
+    ls -la $(Build.SourcesDirectory)
+  displayName: 'Verify Baseline Files'
