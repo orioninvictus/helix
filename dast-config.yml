@@ -1,0 +1,7 @@
+target:
+  name: "Enterprise Core API Test"
+  url: "http://php.testinvicti.com"
+  scan_speed: "fast"
+  critical_threshold: "1"
+  fail_build_on_findings: "true"
+  generate_report: "true"
