@@ -49,7 +49,7 @@ target:
   # -------------------------------------------------------------------
   authentication.type: "form"
   authentication.login_url: "http://php.testinvicti.com/auth/login.php"
-  authentication.username: "admin"
+  authentication.username: "admin1"
   authentication.password: "$(MySecretPassword)"
 
   # -------------------------------------------------------------------
