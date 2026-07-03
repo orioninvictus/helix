@@ -14,6 +14,7 @@ target:
   name: "My Application Service from my Git"
   url: "http://php.testinvicti.com"
   type: "web"                                     # Set to "web" or "api"
+  dynamic: false
 
 
   # -------------------------------------------------------------------
