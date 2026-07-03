@@ -50,7 +50,7 @@ target:
   authentication.type: "form"
   authentication.login_url: "http://php.testinvicti.com/auth/login.php"
   authentication.username: "admin1"
-  authentication.password: "$(MySecretPassword)"
+  authentication.password: "43223543"
 
   # -------------------------------------------------------------------
   # Option E: OAuth 2.0 - Client Credentials Flow
