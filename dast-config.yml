@@ -11,10 +11,10 @@ target:
   # -------------------------------------------------------------------
   # 🎯 Core Target Options
   # -------------------------------------------------------------------
-  name: "My Application Service"
-  url: "https://my-app.staging.company.com"
-  type: "api"                                     # Set to "web" or "api"
-  limit_crawler_scope: "true"
+  name: "My Application Service from my Git"
+  url: "http://php.testinvicti.com"
+  type: "web"                                     # Set to "web" or "api"
+
 
   # -------------------------------------------------------------------
   # 📂 API Specification File (Required if type: "api")
