@@ -30,7 +30,7 @@ target:
   # -------------------------------------------------------------------
   # Default Option (Will fail pipeline if Admin Hub requires authentication)
   # -------------------------------------------------------------------
-  authentication.type: "none"
+  #authentication.type: "none"
 
   # -------------------------------------------------------------------
   # Option B: Dynamic Bearer Token
@@ -47,10 +47,10 @@ target:
   # -------------------------------------------------------------------
   # Option D: Web Form Login
   # -------------------------------------------------------------------
-  # authentication.type: "form"
-  # authentication.login_url: "https://my-app.staging.company.com/identity/login"
-  # authentication.username: "dast.scanner@company.com"
-  # authentication.password: "$(MY_STAGE_USER_PASSWORD)"
+   authentication.type: "form"
+   authentication.login_url: "http://php.testinvicti.com/auth/login.php"
+   authentication.username: "admin"
+   authentication.password: "$(MySecretPassword)"
 
   # -------------------------------------------------------------------
   # Option E: OAuth 2.0 - Client Credentials Flow
