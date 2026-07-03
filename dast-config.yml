@@ -20,8 +20,8 @@ target:
   # -------------------------------------------------------------------
   # 📂 API Specification File (Required if type: "api")
   # -------------------------------------------------------------------
-  api_spec_file: "src/api/v1/openapi.json"        # Relative path within repository
-  import_file_name: "openapi-spec.json"
+  # api_spec_file: "src/api/v1/openapi.json"        # Relative path within repository
+  # import_file_name: "openapi-spec.json"
 
   # =====================================================================
   # 🔑 Target Authentication Schemes (Pick ONLY One Option Below)
@@ -47,10 +47,10 @@ target:
   # -------------------------------------------------------------------
   # Option D: Web Form Login
   # -------------------------------------------------------------------
-   authentication.type: "form"
-   authentication.login_url: "http://php.testinvicti.com/auth/login.php"
-   authentication.username: "admin"
-   authentication.password: "$(MySecretPassword)"
+  authentication.type: "form"
+  authentication.login_url: "http://php.testinvicti.com/auth/login.php"
+  authentication.username: "admin"
+  authentication.password: "$(MySecretPassword)"
 
   # -------------------------------------------------------------------
   # Option E: OAuth 2.0 - Client Credentials Flow
