@@ -1,88 +1,10 @@
-# =====================================================================
-# DAST SCAN CONFIGURATION PROFILE
-# =====================================================================
-# INSTRUCTIONS:
-# 1. Place this file named exactly '.dast-config.yml' in your repository root.
-# 2. To configure authentication, uncomment your required strategy block below.
-# 3. DO NOT type cleartext passwords here. Use $(VARIABLE_NAME) syntax 
-#    to reference your secret pipeline variables.
-
 target:
-  # -------------------------------------------------------------------
-  # 🎯 Core Target Options
-  # -------------------------------------------------------------------
-  name: "My Application Service from my Git"
-  url: "http://php.testinvicti.com"
-  type: "web"                                     # Set to "web" or "api"
-  dynamic: false
+  name: "Gateway Staging API"
+  url: "https://secure-asg6aughh4avg3gr.westus3-01.azurewebsites.net"
+  type: "api"
+  api_spec_file: "openapi.json"
+  max_scan_time: 30
 
-
-  # -------------------------------------------------------------------
-  # 📂 API Specification File (Required if type: "api")
-  # -------------------------------------------------------------------
-  # api_spec_file: "src/api/v1/openapi.json"        # Relative path within repository
-  # import_file_name: "openapi-spec.json"
-
-  # =====================================================================
-  # 🔑 Target Authentication Schemes (Pick ONLY One Option Below)
-  # =====================================================================
-
-  # -------------------------------------------------------------------
-  # Default Option (Will fail pipeline if Admin Hub requires authentication)
-  # -------------------------------------------------------------------
-  #authentication.type: "none"
-
-  # -------------------------------------------------------------------
-  # Option B: Dynamic Bearer Token
-  # -------------------------------------------------------------------
-  # authentication.type: "bearer"
-  # bearer_token: "$(MY_PIPELINE_BEARER_SECRET)"
-
-  # -------------------------------------------------------------------
-  # Option C: Static Api Tokens / Custom Custom Headers
-  # -------------------------------------------------------------------
-  # authentication.type: "token"
-  # auth_token: "$(MY_PIPELINE_STATIC_TOKEN)"
-
-  # -------------------------------------------------------------------
-  # Option D: Web Form Login
-  # -------------------------------------------------------------------
-  authentication.type: "form"
-  authentication.login_url: "http://php.testinvicti.com/auth/login.php"
-  authentication.username: "admin1"
-  authentication.password: "43223543"
-
-  # -------------------------------------------------------------------
-  # Option E: OAuth 2.0 - Client Credentials Flow
-  # -------------------------------------------------------------------
-  # authentication.type: "oauth"
-  # oauth.grant_type: "client_credentials"
-  # oauth.access_token_url: "https://identity.company.com/oauth/v2/token"
-  # oauth.client_id: "dast_automation_client_id"
-  # oauth.client_secret: "$(SECURE_OAUTH_CLIENT_SECRET)"
-  # oauth.scope: "api.read api.write"
-
-  # -------------------------------------------------------------------
-  # Option F: OAuth 2.0 - Authorization Code Flow
-  # -------------------------------------------------------------------
-  # authentication.type: "oauth"
-  # oauth.grant_type: "authorization_code"
-  # oauth.access_token_url: "https://identity.company.com/oauth/v2/token"
-  # oauth.authorization_url: "https://identity.company.com/oauth/v2/authorize"
-  # oauth.redirect_uri: "https://my-app.staging.company.com/oauth/callback"
-  # oauth.client_id: "dast_auth_code_client_id"
-  # oauth.client_secret: "$(SECURE_OAUTH_CLIENT_SECRET)"
-  # oauth.state: "dast_secure_anti_csrf_token"
-  # oauth.scope: "api.read offline_access"
-
-  # -------------------------------------------------------------------
-  # Option G: OAuth 2.0 - Resource Owner Password Flow
-  # -------------------------------------------------------------------
-  # authentication.type: "oauth"
-  # oauth.grant_type: "password"
-  # oauth.access_token_url: "https://identity.company.com/oauth/v2/token"
-  # oauth.client_id: "dast_resource_owner_client_id"
-  # oauth.client_secret: "$(SECURE_OAUTH_CLIENT_SECRET)"
-  # oauth.username: "dast.service.user@company.com"
-  # oauth.password: "$(SECURE_OAUTH_USER_PASSWORD)"
-  # oauth.scope: "api.write"
+  authentication.type: "managed_identity"
+  managed_identity.resource: "api://9e5aca13-a5df-43e3-8f10-9956b426dc6e"
+  managed_identity.client_id: "5fcdbb38-ac81-4d9a-af8d-e99849b003a8"
