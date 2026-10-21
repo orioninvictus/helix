@@ -3,7 +3,7 @@ target:
   url: "https://secure-asg6aughh4avg3gr.westus3-01.azurewebsites.net"
   type: "api"
   api_spec_file: "openapi.json"
-  max_scan_time: 300
+  max_scan_time: 3600
 
   authentication.type: "managed_identity"
   managed_identity.resource: "api://9e5aca13-a5df-43e3-8f10-9956b426dc6e"
